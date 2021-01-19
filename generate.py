@@ -21,9 +21,8 @@ def largest_square(image: np.ndarray) -> np.ndarray:
         return image[long_edge_center - short_edge_half:
                      long_edge_center + short_edge_half, :]
 
-def create_rectangle_nail_positions(picture, nail_step=2):
-    height = len(picture)
-    width = len(picture[0])
+def create_rectangle_nail_positions(shape, nail_step=2):
+    height, width = shape
 
     nails_top = [(0, i) for i in range(0, width, nail_step)]
     nails_bot = [(height-1, i) for i in range(0, width, nail_step)]
@@ -183,6 +182,7 @@ if __name__ == '__main__':
     parser.add_argument('-n', action="store", type=int, dest="nail_step", default=4)
     parser.add_argument('--wb', action="store_true")
     parser.add_argument('--rgb', action="store_true")
+    parser.add_argument('--rect', action="store_true")
 
     args = parser.parse_args()
 
@@ -198,7 +198,13 @@ if __name__ == '__main__':
         img = resize(img, (LONG_SIDE, LONG_SIDE))
 
     shape = ( len(img), len(img[0]) )
-    nails = create_circle_nail_positions(shape, args.nail_step, args.radius1_multiplier, args.radius2_multiplier)
+
+    if args.rect:
+        nails = create_rectangle_nail_positions(shape, args.nail_step)
+    else:
+        nails = create_circle_nail_positions(shape, args.nail_step, args.radius1_multiplier, args.radius2_multiplier)
+
+
     print(f"Nails amount: {len(nails)}")
     if args.rgb:
         iteration_strength = 0.1 if args.wb else -0.1
