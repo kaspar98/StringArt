@@ -31,11 +31,11 @@ def create_rectangle_nail_positions(picture, nail_step=2):
     nails_left = [(i, 0) for i in range(1, height-1, nail_step)]
     nails = nails_top + nails_right + nails_bot + nails_left
 
-    return nails
+    return np.array(nails)
 
-def create_circle_nail_positions(picture, nail_step=2, r1_multip=1, r2_multip=1):
-    height = len(picture)
-    width = len(picture[0])
+def create_circle_nail_positions(shape, nail_step=2, r1_multip=1, r2_multip=1):
+    height = shape[0]
+    width = shape[1]
 
     centre = (height // 2, width // 2)
     radius = min(height, width) // 2 - 1
@@ -45,16 +45,6 @@ def create_circle_nail_positions(picture, nail_step=2, r1_multip=1, r2_multip=1)
     nails = nails[::nail_step]
 
     return np.asarray(nails)
-
-def init_black_canvas(picture):
-    height = len(picture)
-    width = len(picture[0])
-    return np.zeros((height, width))
-
-def init_white_canvas(picture):
-    height = len(picture)
-    width = len(picture[0])
-    return np.ones((height, width))
 
 def init_canvas(shape, black=False):
     if black:
@@ -74,8 +64,14 @@ def find_best_nail_position(current_position, nails, str_pic, orig_pic, str_stre
     best_cumulative_improvement = -99999
     best_nail_position = None
     best_nail_idx = None
+    
+    if args.random_nails != None:
+        nail_ids = np.random.choice(range(len(nails)), size=args.random_nails, replace=False)
+        nails_and_ids = list(zip(nail_ids, nails[nail_ids]))
+    else:
+        nails_and_ids = enumerate(nails)
 
-    for nail_idx, nail_position in enumerate(nails):
+    for nail_idx, nail_position in nails_and_ids:
 
         overlayed_line, rr, cc = get_aa_line(current_position, nail_position, str_strength, str_pic)
 
@@ -91,7 +87,7 @@ def find_best_nail_position(current_position, nails, str_pic, orig_pic, str_stre
 
     return best_nail_idx, best_nail_position, best_cumulative_improvement
 
-def create_art(nails, orig_pic, str_pic, str_strength, i_limit=10000):
+def create_art(nails, orig_pic, str_pic, str_strength, i_limit=None):
 
     start = time()
     iter_times = []
@@ -105,16 +101,23 @@ def create_art(nails, orig_pic, str_pic, str_strength, i_limit=10000):
         start_iter = time()
 
         i += 1
-        if fails >= 3 or i > i_limit:
-            break
+        
+        if i%500 == 0:
+            print(f"Iteration {i}")
+        
+        if i_limit == None:
+            if fails >= 3:
+                break
+        else:
+            if i > i_limit:
+                break
 
         idx, best_nail_position, best_cumulative_improvement = find_best_nail_position(current_position, nails,
                                                                                        str_pic, orig_pic, str_strength)
 
-        # if best_cumulative_improvement <= 0:
-        #     print("Failed!")
-        #     fails += 1
-        #     continue
+        if best_cumulative_improvement <= 0:
+            fails += 1
+            continue
 
         pull_order.append(idx)
         best_overlayed_line, rr, cc = get_aa_line(current_position, best_nail_position, str_strength, str_pic)
@@ -173,7 +176,11 @@ if __name__ == '__main__':
     parser.add_argument('-o', action="store", dest="output_file", default="output.png")
     parser.add_argument('-d', action="store", type=int, dest="side_len", default=300)
     parser.add_argument('-s', action="store", type=float, dest="export_strength", default=0.1)
-    parser.add_argument('-l', action="store", type=int, dest="pull_amount", default=2000)
+    parser.add_argument('-l', action="store", type=int, dest="pull_amount", default=None)
+    parser.add_argument('-r', action="store", type=int, dest="random_nails", default=None)
+    parser.add_argument('-r1', action="store", type=float, dest="radius1_multiplier", default=1)
+    parser.add_argument('-r2', action="store", type=float, dest="radius2_multiplier", default=1)
+    parser.add_argument('-n', action="store", type=int, dest="nail_step", default=4)
     parser.add_argument('--wb', action="store_true")
     parser.add_argument('--rgb', action="store_true")
 
@@ -182,30 +189,33 @@ if __name__ == '__main__':
     LONG_SIDE = 300
 
     img = mpimg.imread(args.input_file)
-    img = largest_square(img)
-    img = resize(img, (LONG_SIDE, LONG_SIDE))
+    
+    if np.any(img>100):
+        img = img / 255
+    
+    if args.radius1_multiplier == 1 and args.radius2_multiplier == 1:
+        img = largest_square(img)
+        img = resize(img, (LONG_SIDE, LONG_SIDE))
 
-    orig_pic = rgb2gray(img)*0.9
-    nails = create_circle_nail_positions(orig_pic, 4)
-
+    shape = ( len(img), len(img[0]) )
+    nails = create_circle_nail_positions(shape, args.nail_step, args.radius1_multiplier, args.radius2_multiplier)
+    print(f"Nails amount: {len(nails)}")
     if args.rgb:
         iteration_strength = 0.1 if args.wb else -0.1
 
         r = img[:,:,0]
         g = img[:,:,1]
         b = img[:,:,2]
+        
 
-        orig_pic = r
-        str_pic_r = init_white_canvas(orig_pic)
-        pull_orders_r = create_art(nails, orig_pic, str_pic_r, iteration_strength, i_limit=args.pull_amount)
+        str_pic_r = init_canvas(shape, black=args.wb)
+        pull_orders_r = create_art(nails, r, str_pic_r, iteration_strength, i_limit=args.pull_amount)
 
-        orig_pic = g
-        str_pic_g = init_white_canvas(orig_pic)
-        pull_orders_g = create_art(nails, orig_pic, str_pic_g, iteration_strength, i_limit=args.pull_amount)
+        str_pic_g = init_canvas(shape, black=args.wb)
+        pull_orders_g = create_art(nails, g, str_pic_g, iteration_strength, i_limit=args.pull_amount)
 
-        orig_pic = b
-        str_pic_b = init_white_canvas(orig_pic)
-        pull_orders_b = create_art(nails, orig_pic, str_pic_b, iteration_strength, i_limit=args.pull_amount)
+        str_pic_b = init_canvas(shape, black=args.wb)
+        pull_orders_b = create_art(nails, b, str_pic_b, iteration_strength, i_limit=args.pull_amount)
 
         max_pulls = np.max([len(pull_orders_r), len(pull_orders_g), len(pull_orders_b)])
         pull_orders_r = pull_orders_r + [pull_orders_r[-1]] * (max_pulls - len(pull_orders_r))
@@ -214,13 +224,13 @@ if __name__ == '__main__':
 
         pull_orders = [pull_orders_r, pull_orders_g, pull_orders_b]
 
-        color_image_dimens = args.side_len, args.side_len, 3
-
+        color_image_dimens = int(args.side_len * args.radius1_multiplier), int(args.side_len * args.radius2_multiplier), 3
+        print(color_image_dimens)
         blank = init_canvas(color_image_dimens, black=args.wb)
 
         scaled_nails = scale_nails(
-            color_image_dimens[1] / len(orig_pic),
-            color_image_dimens[0] / len(orig_pic[0]),
+            color_image_dimens[1] / shape[1],
+            color_image_dimens[0] / shape[0],
             nails
         )
 
@@ -234,20 +244,23 @@ if __name__ == '__main__':
         mpimg.imsave(args.output_file, result, cmap=plt.get_cmap("gray"), vmin=0.0, vmax=1.0)
 
     else:
-        image_dimens = args.side_len, args.side_len
+        orig_pic = rgb2gray(img)*0.9
+        
+        image_dimens = int(args.side_len * args.radius1_multiplier), int(args.side_len * args.radius2_multiplier)
         if args.wb:
-            str_pic = init_black_canvas(orig_pic)
+            str_pic = init_canvas(shape, black=True)
             pull_order = create_art(nails, orig_pic, str_pic, 0.05, i_limit=args.pull_amount)
-            blank = init_black_canvas(np.empty(image_dimens))
+            blank = init_canvas(image_dimens, black=True)
+
 
         else:
-            str_pic = init_white_canvas(orig_pic)
+            str_pic = init_canvas(shape, black=False)
             pull_order = create_art(nails, orig_pic, str_pic, -0.05, i_limit=args.pull_amount)
-            blank = init_white_canvas(np.empty(image_dimens))
+            blank = init_canvas(image_dimens, black=False)
 
         scaled_nails = scale_nails(
-            image_dimens[1] / len(orig_pic),
-            image_dimens[0] / len(orig_pic[0]),
+            image_dimens[1] / shape[1],
+            image_dimens[0] / shape[0],
             nails
         )
 
