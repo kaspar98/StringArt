@@ -35,6 +35,8 @@ Possible flags:
 * “--wb” for white string on a black canvas;<br>
 * “--rect” to put nails in a square around the picture (default is circle).<br>
 
+Nails are placed evenly around the perimeter. For circles the first nail is placed at 9 o'clock and the order goes clockwise. For squares, the first nail is placed at the top left corner and the order goes clockwise.
+
 # Examples
 ![Ex1](https://raw.githubusercontent.com/kaspar98/StringArt/main/examples/Algoritmika%20fig%201.png)
 --------
