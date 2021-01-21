@@ -1,13 +1,13 @@
 # StringArt
 Project for algorithmics course 2020. Also submitted  to DeltaX 2021. Recreate art by connecting nails with strings.
 
-For a quick overview of the project, look at the project's [poster](https://raw.githubusercontent.com/kaspar98/StringArt/main/Algoritmika%20poster%20puhtand.pdf) included in git as a PDF.
+For a quick overview of the project, look at the project's [poster](https://raw.githubusercontent.com/kaspar98/StringArt/main/Algoritmika%20poster%20puhtand.pdf).
 
 **Project goal**<br>
 Recreate images by looping a continuous string around nails. The nails are fixed on the border of a canvas (e.g. on a circle’s or rectangle’s perimeter).
 
 **Project result**<br>
-A software tool that can be used from the command line ("generate.py") to create string art and get instructions to get replicate the result.
+A software tool that can be used from the command line ("generate.py") to create string art and get instructions to replicate the result.
 
 **Core of the project**<br>
 Input: nail positions, reference image.<br>
