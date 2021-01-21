@@ -11,7 +11,7 @@ A software tool that can be used from the command line ("generate.py") to create
 
 **Core of the project**<br>
 Input: nail positions, reference image.<br>
-Output: a string art version of the reference image; and the order of string pulls to loop the continuous string around nails, which gives the output image. 
+Output: a string art version of the reference image; and the order of nails around which to loop the continuous string to get the output image. 
 
 The algorithm:<br>
 1) Evaluate the goodness of every possible string pull from the current nail.*¹ <br>
