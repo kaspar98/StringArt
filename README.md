@@ -29,7 +29,7 @@ Possible flags:
 * “-d <int>” output file dimensions (default is 300); if output dimens are scaled up, then string strength should also be<;br>
 * “-l <int>” number of iterations (default will run until no improvement);<br>
 * “-r <int>“ number of random nails to pick from when choosing the next nail to speed up the algorithm at the cost of quality (default looks at all possible nails every iteration; good value for this is ~50);<br>
-* “-n <int>” step between nails (default is 4). The smaller the step, the more nails there will be. The larger the step, the less nails. Minimum possible value is 1<br>;
+* “-n <int>” step between nails (default is 4). The smaller the step, the more nails there will be. The larger the step, the less nails. Minimum possible value is 1;<br>
 * “-s <float 0..1>” string strength for output (default is 0.1);<br>
 * “--rgb” for colored output (default is black string on white canvas). In case of RGB, pull order isn't returned as it might not match the real life result (additive blending);<br>
 * “--wb” for white string on a black canvas;<br>
